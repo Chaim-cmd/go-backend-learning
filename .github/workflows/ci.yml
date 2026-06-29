@@ -33,7 +33,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.25.1'
           cache: true  # 缓存 go mod，加速后续 CI
 
       - name: Download dependencies
