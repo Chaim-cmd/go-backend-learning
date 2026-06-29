@@ -1,0 +1,34 @@
+run:
+  timeout: 3m
+  go: '1.22'
+
+linters:
+  enable:
+    - errcheck      # 检查未处理的 error
+    - gosimple      # 代码简化建议
+    - govet         # go vet 检查
+    - ineffassign   # 检查无效赋值
+    - staticcheck   # 静态分析
+    - unused        # 检查未使用的代码
+    - gofmt         # 格式检查
+    - goimports     # import 排序检查
+    - misspell      # 英文拼写检查
+    - gocritic      # 代码风格建议
+    - revive        # 替代 golint
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported  # 导出函数必须有注释
+        disabled: true  # 学习阶段先关掉，工作项目再开
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+
+issues:
+  exclude-rules:
+    # 测试文件放宽限制
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gocritic

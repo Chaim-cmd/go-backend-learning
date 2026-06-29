@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    name: Lint + Test + Build
+    runs-on: ubuntu-latest
+
+    services:
+      # CI 环境里启动一个真实的 MySQL 容器，跑集成测试用
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_DATABASE: go_learning_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p123456"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true  # 缓存 go mod，加速后续 CI
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=3m
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+        env:
+          # 注入数据库配置，测试代码从环境变量读
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 123456
+          DB_NAME: go_learning_test
+
+      - name: Show coverage
+        run: go tool cover -func=coverage.out
+
+      - name: Build
+        run: go build -v ./cmd/server/...
